@@ -1,0 +1,13 @@
+# Dependencias
+node_modules/
+
+# Compilación
+dist/
+
+# Base de datos local (se genera automáticamente)
+data.json
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
