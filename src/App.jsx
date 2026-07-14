@@ -101,6 +101,18 @@ export default function App() {
     fetchData();
   }, []);
 
+  // Auto-scroll selected client card into view
+  useEffect(() => {
+    if (selectedClientId) {
+      setTimeout(() => {
+        const el = document.querySelector(`.client-card.selected`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 100);
+    }
+  }, [selectedClientId]);
+
   // Update Reset Countdown Timer every second
   useEffect(() => {
     if (!lastReset) return;

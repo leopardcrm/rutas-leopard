@@ -364,15 +364,14 @@ body {
 .client-card {
   padding: 12px;
   border-radius: var(--radius-sm);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--border-color);
   cursor: pointer;
-  transition: var(--transition-fast);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
   position: relative;
+  border: 1px solid var(--border-color);
 }
 
 .client-card::before {
@@ -385,18 +384,50 @@ body {
   border-radius: var(--radius-full) 0 0 var(--radius-full);
 }
 
+/* Status-specific background and borders */
+.client-card.status-Pendiente {
+  background: rgba(245, 158, 11, 0.04);
+  border: 1px solid rgba(245, 158, 11, 0.12);
+}
 .client-card.status-Pendiente::before { background-color: var(--status-pending); }
-.client-card.status-Visitado::before { background-color: var(--status-visited); }
-.client-card.status-Cerrado::before { background-color: var(--status-closed); }
-
-.client-card:hover {
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateX(2px);
+.client-card.status-Pendiente:hover {
+  background: rgba(245, 158, 11, 0.08);
+  transform: translateX(3px);
+}
+.client-card.status-Pendiente.selected {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
 }
 
-.client-card.selected {
-  background: rgba(59, 130, 246, 0.06);
-  border-color: rgba(59, 130, 246, 0.3);
+.client-card.status-Visitado {
+  background: rgba(16, 185, 129, 0.04);
+  border: 1px solid rgba(16, 185, 129, 0.12);
+}
+.client-card.status-Visitado::before { background-color: var(--status-visited); }
+.client-card.status-Visitado:hover {
+  background: rgba(16, 185, 129, 0.08);
+  transform: translateX(3px);
+}
+.client-card.status-Visitado.selected {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+}
+
+.client-card.status-Cerrado {
+  background: rgba(239, 68, 68, 0.04);
+  border: 1px solid rgba(239, 68, 68, 0.12);
+}
+.client-card.status-Cerrado::before { background-color: var(--status-closed); }
+.client-card.status-Cerrado:hover {
+  background: rgba(239, 68, 68, 0.08);
+  transform: translateX(3px);
+}
+.client-card.status-Cerrado.selected {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
 }
 
 .client-info {
