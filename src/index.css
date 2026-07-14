@@ -787,9 +787,9 @@ body {
   100% { transform: scale(1); }
 }
 
-/* Leaflet Map dark theme inversion style */
+/* Leaflet Map tile styling */
 .leaflet-tile {
-  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+  /* Normal display for OpenStreetMap tiles */
 }
 
 .leaflet-container {

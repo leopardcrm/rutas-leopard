@@ -168,9 +168,9 @@ export default function App() {
       attributionControl: false 
     }).setView(defaultCenter, 13);
 
-    // Dark tiles from Stadia or CartoDB (CartoDB Dark Matter is reliable and free without key)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20
+    // Standard OpenStreetMap tiles for maximum detail of streets and avenues
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19
     }).addTo(map);
 
     L.control.zoom({ position: 'topleft' }).addTo(map);
