@@ -17,7 +17,11 @@ import {
   RefreshCw,
   Info,
   ChevronRight,
-  Compass
+  Compass,
+  Settings,
+  BarChart3,
+  Edit,
+  Download
 } from 'lucide-react';
 
 // Distance calculator helper (Haversine formula in meters)
@@ -52,6 +56,8 @@ export default function App() {
   const [visitStatus, setVisitStatus] = useState('Visitado'); // 'Visitado' | 'Cerrado'
   const [observations, setObservations] = useState('');
   const [resetCountdown, setResetCountdown] = useState('');
+  const [editingSellerId, setEditingSellerId] = useState(null);
+  const [editingSellerName, setEditingSellerName] = useState('');
 
   // GPS State
   const [gpsPosition, setGpsPosition] = useState(null); // { latitude, longitude, accuracy }
@@ -510,6 +516,142 @@ export default function App() {
     }
   };
 
+  // Handle Update Seller Name
+  const handleUpdateSellerName = async (sellerId, newName) => {
+    if (!newName || !newName.trim()) {
+      alert("El nombre del vendedor no puede estar vacío.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/sellers/${sellerId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+      });
+
+      if (res.ok) {
+        const updatedSeller = await res.json();
+        setSellers(prev => prev.map(s => s.id === sellerId ? updatedSeller : s));
+        setEditingSellerId(null);
+        setEditingSellerName('');
+        alert("¡Vendedor actualizado con éxito!");
+      } else {
+        const errorData = await res.json();
+        alert(`Error: ${errorData.error || "No se pudo actualizar el vendedor."}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error de conexión al actualizar el vendedor.");
+    }
+  };
+
+  // Download CSV helper
+  const downloadCSV = (data, filename) => {
+    const csvContent = "\uFEFF" + data.map(row => 
+      row.map(val => {
+        const strVal = val === null || val === undefined ? '' : String(val);
+        if (strVal.includes(';') || strVal.includes('"') || strVal.includes('\n')) {
+          return `"${strVal.replace(/"/g, '""')}"`;
+        }
+        return strVal;
+      }).join(";")
+    ).join("\n");
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Export Daily Log (Visits today)
+  const exportDailyLog = () => {
+    const today = new Date().toDateString();
+    const todayVisits = history.filter(h => new Date(h.timestamp).toDateString() === today);
+    
+    if (todayVisits.length === 0) {
+      alert("No hay visitas registradas el día de hoy para exportar.");
+      return;
+    }
+
+    const headers = [
+      "ID Visita", 
+      "Fecha", 
+      "Hora", 
+      "Vendedor", 
+      "Cliente", 
+      "Nombre Tienda", 
+      "Estado", 
+      "Observaciones", 
+      "Latitud Checkin", 
+      "Longitud Checkin"
+    ];
+
+    const rows = todayVisits.map(v => {
+      const seller = sellers.find(s => s.id === v.seller_id);
+      const dateObj = new Date(v.timestamp);
+      return [
+        v.id,
+        dateObj.toLocaleDateString('es-BO'),
+        dateObj.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        seller ? seller.name : `Vendedor ${v.seller_id}`,
+        v.client_name,
+        v.shop_name || '',
+        v.status,
+        v.observations || '',
+        v.latitude_checkin || '',
+        v.longitude_checkin || ''
+      ];
+    });
+
+    downloadCSV([headers, ...rows], `Registro_Diario_Rutas_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  // Export Complete Log
+  const exportCompleteLog = () => {
+    if (history.length === 0) {
+      alert("No hay visitas en el historial para exportar.");
+      return;
+    }
+
+    const headers = [
+      "ID Visita", 
+      "Fecha", 
+      "Hora", 
+      "Vendedor", 
+      "Cliente", 
+      "Nombre Tienda", 
+      "Estado", 
+      "Observaciones", 
+      "Latitud Checkin", 
+      "Longitud Checkin"
+    ];
+
+    const rows = history.map(v => {
+      const seller = sellers.find(s => s.id === v.seller_id);
+      const dateObj = new Date(v.timestamp);
+      return [
+        v.id,
+        dateObj.toLocaleDateString('es-BO'),
+        dateObj.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        seller ? seller.name : `Vendedor ${v.seller_id}`,
+        v.client_name,
+        v.shop_name || '',
+        v.status,
+        v.observations || '',
+        v.latitude_checkin || '',
+        v.longitude_checkin || ''
+      ];
+    });
+
+    downloadCSV([headers, ...rows], `Historial_Completo_Rutas_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
   // Filter clients to show
   const filteredClients = clients.filter(c => {
     const matchesSearch = c.client_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -621,12 +763,35 @@ export default function App() {
               <FileText />
               Historial
             </button>
+            <button 
+              className={`tab-btn ${activeTab === 'config' ? 'active' : ''}`}
+              onClick={() => { setActiveTab('config'); setShowMobileDrawer(true); }}
+            >
+              <Settings />
+              Panel
+            </button>
           </div>
         </div>
 
         {/* Sidebar Content (Scrollable) */}
         <div className={`sidebar-content ${showMobileDrawer ? 'open' : ''}`}>
           <div className="mobile-pull-bar" onClick={() => setShowMobileDrawer(false)}></div>
+          
+          <div className="mobile-drawer-header">
+            <span className="mobile-drawer-title">
+              {activeTab === 'clientes' && 'Lista de Clientes'}
+              {activeTab === 'registrar' && 'Registrar Cliente'}
+              {activeTab === 'reportes' && 'Historial de Visitas'}
+              {activeTab === 'config' && 'Panel de Control'}
+            </span>
+            <button 
+              className="mobile-drawer-close-btn"
+              onClick={() => setShowMobileDrawer(false)}
+              type="button"
+            >
+              <XCircle size={22} />
+            </button>
+          </div>
           
           {/* Tab 1: Clientes List & Stats */}
           {activeTab === 'clientes' && (
@@ -904,6 +1069,154 @@ export default function App() {
               </div>
             </div>
           )}
+
+          {/* Tab 4: Configuración, Reportes y Métricas */}
+          {activeTab === 'config' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              {/* Sección 1: Métricas de Hoy */}
+              <div>
+                <h3 className="section-title"><BarChart3 size={16} /> Métricas de Hoy</h3>
+                
+                <div className="metrics-summary-card">
+                  <div className="metric-item">
+                    <span className="metric-val">{history.filter(h => new Date(h.timestamp).toDateString() === new Date().toDateString()).length}</span>
+                    <span className="metric-lbl">Visitas de Hoy</span>
+                  </div>
+                  <div className="metric-item">
+                    <span className="metric-val">
+                      {(() => {
+                        const today = new Date().toDateString();
+                        const todayVisits = history.filter(h => new Date(h.timestamp).toDateString() === today);
+                        const visited = todayVisits.filter(v => v.status === 'Visitado').length;
+                        return todayVisits.length > 0 ? `${(visited / todayVisits.length * 100).toFixed(0)}%` : '0%';
+                      })()}
+                    </span>
+                    <span className="metric-lbl">Efectividad</span>
+                  </div>
+                </div>
+
+                {/* Cobertura General (Barra de progreso) */}
+                <div className="progress-container-panel">
+                  <span className="progress-lbl">Avance Global de Rutas:</span>
+                  <div className="progress-bar-stacked">
+                    {(() => {
+                      const total = clients.length || 1;
+                      const visited = clients.filter(c => c.status === 'Visitado').length;
+                      const closed = clients.filter(c => c.status === 'Cerrado').length;
+                      const pending = clients.filter(c => c.status === 'Pendiente').length;
+
+                      const visPct = (visited / total * 100).toFixed(1);
+                      const clsPct = (closed / total * 100).toFixed(1);
+                      const penPct = (pending / total * 100).toFixed(1);
+
+                      return (
+                        <>
+                          <div className="progress-seg visited" style={{ width: `${visPct}%` }} title={`Visitados: ${visited} (${visPct}%)`}></div>
+                          <div className="progress-seg closed" style={{ width: `${clsPct}%` }} title={`Cerrados: ${closed} (${clsPct}%)`}></div>
+                          <div className="progress-seg pending" style={{ width: `${penPct}%` }} title={`Pendientes: ${pending} (${penPct}%)`}></div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                  <div className="progress-legend">
+                    <span className="legend-item"><span className="legend-dot green"></span> {clients.filter(c => c.status === 'Visitado').length} Visitados</span>
+                    <span className="legend-item"><span className="legend-dot red"></span> {clients.filter(c => c.status === 'Cerrado').length} Cerrados</span>
+                    <span className="legend-item"><span className="legend-dot yellow"></span> {clients.filter(c => c.status === 'Pendiente').length} Pendientes</span>
+                  </div>
+                </div>
+
+                {/* Resumen por Vendedor hoy */}
+                <div className="sellers-activity-list">
+                  <h4 className="sub-section-title">Actividad de Hoy por Vendedor</h4>
+                  {sellers.map(s => {
+                    const today = new Date().toDateString();
+                    const visitsToday = history.filter(h => h.seller_id === s.id && new Date(h.timestamp).toDateString() === today).length;
+                    const clientsTotal = clients.filter(c => c.seller_id === s.id).length;
+                    const clientsVisited = clients.filter(c => c.seller_id === s.id && (c.status === 'Visitado' || c.status === 'Cerrado')).length;
+                    const progress = clientsTotal > 0 ? (clientsVisited / clientsTotal * 100).toFixed(0) : 0;
+                    return (
+                      <div key={s.id} className="seller-activity-item">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="seller-bullet" style={{ backgroundColor: s.color }}></span>
+                          <span className="seller-act-name">{s.name}</span>
+                        </div>
+                        <div className="seller-act-stats">
+                          <span className="seller-act-visits"><b>{visitsToday}</b> vis</span>
+                          <span className="seller-act-progress">{progress}% ruta</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Sección 2: Edición de Vendedores */}
+              <div>
+                <h3 className="section-title"><User size={16} /> Editar Vendedores</h3>
+                <div className="sellers-edit-list">
+                  {sellers.map(s => (
+                    <div key={s.id} className="seller-edit-row">
+                      <div className="seller-color-pill" style={{ backgroundColor: s.color }}></div>
+                      
+                      {editingSellerId === s.id ? (
+                        <div className="seller-edit-inputs">
+                          <input 
+                            type="text" 
+                            className="form-input seller-name-input"
+                            value={editingSellerName}
+                            onChange={(e) => setEditingSellerName(e.target.value)}
+                            style={{ margin: 0, padding: '4px 8px', fontSize: '13px' }}
+                          />
+                          <div className="seller-edit-actions">
+                            <button 
+                              onClick={() => handleUpdateSellerName(s.id, editingSellerName)} 
+                              className="seller-btn-save"
+                              type="button"
+                            >
+                              Guardar
+                            </button>
+                            <button 
+                              onClick={() => { setEditingSellerId(null); setEditingSellerName(''); }} 
+                              className="seller-btn-cancel"
+                              type="button"
+                            >
+                              X
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="seller-display-info">
+                          <span className="seller-display-name">{s.name}</span>
+                          <button 
+                            onClick={() => { setEditingSellerId(s.id); setEditingSellerName(s.name); }} 
+                            className="seller-btn-edit"
+                            type="button"
+                          >
+                            <Edit size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sección 3: Descarga de Registros */}
+              <div>
+                <h3 className="section-title"><Download size={16} /> Descargar Reportes</h3>
+                <div className="export-buttons-grid">
+                  <button onClick={exportDailyLog} className="export-btn daily" type="button">
+                    <Download size={14} /> Registro Diario (CSV)
+                  </button>
+                  <button onClick={exportCompleteLog} className="export-btn complete" type="button">
+                    <Download size={14} /> Historial Completo (CSV)
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          )}
         </div>
       </aside>
 
@@ -1064,6 +1377,42 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Mobile Bottom Navigation Bar */}
+      <nav className="mobile-bottom-nav">
+        <button 
+          className={`mobile-nav-btn ${activeTab === 'clientes' && showMobileDrawer ? 'active' : ''}`}
+          onClick={() => { setActiveTab('clientes'); setShowMobileDrawer(true); }}
+          type="button"
+        >
+          <Users size={18} />
+          <span>Clientes</span>
+        </button>
+        <button 
+          className={`mobile-nav-btn ${activeTab === 'registrar' && showMobileDrawer ? 'active' : ''}`}
+          onClick={() => { setActiveTab('registrar'); setShowMobileDrawer(true); }}
+          type="button"
+        >
+          <PlusCircle size={18} />
+          <span>Registrar</span>
+        </button>
+        <button 
+          className={`mobile-nav-btn ${activeTab === 'reportes' && showMobileDrawer ? 'active' : ''}`}
+          onClick={() => { setActiveTab('reportes'); setShowMobileDrawer(true); }}
+          type="button"
+        >
+          <FileText size={18} />
+          <span>Historial</span>
+        </button>
+        <button 
+          className={`mobile-nav-btn ${activeTab === 'config' && showMobileDrawer ? 'active' : ''}`}
+          onClick={() => { setActiveTab('config'); setShowMobileDrawer(true); }}
+          type="button"
+        >
+          <Settings size={18} />
+          <span>Panel</span>
+        </button>
+      </nav>
     </div>
   );
 }

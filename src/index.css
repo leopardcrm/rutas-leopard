@@ -923,11 +923,16 @@ body {
   to { transform: scale(1); opacity: 1; }
 }
 
+/* Mobile Bottom Nav Bar */
+.mobile-bottom-nav {
+  display: none;
+}
+
 /* Mobile Responsiveness Rules */
 @media (max-width: 768px) {
   .app-container {
     grid-template-columns: 1fr;
-    grid-template-rows: 60px 1fr;
+    grid-template-rows: 60px 1fr 64px;
     height: 100vh;
   }
 
@@ -983,10 +988,10 @@ body {
     font-size: 12px;
   }
 
-  /* Map Panel taking full screen except header */
+  /* Map Panel taking full screen except header and footer nav */
   .map-container {
     grid-row: 2;
-    height: calc(100vh - 60px);
+    height: calc(100vh - 124px) !important;
   }
 
   /* Slide-up sidebar drawer for list/details */
@@ -995,7 +1000,7 @@ body {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 60vh;
+    height: 70vh !important;
     background: var(--bg-card);
     z-index: 100;
     border-top: 1px solid var(--border-color);
@@ -1003,7 +1008,8 @@ body {
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
-    padding: 20px;
+    padding: 20px 20px 80px 20px !important; /* Bottom padding keeps content above mobile bottom nav */
+    overflow-y: auto;
   }
 
   .sidebar-content.open {
@@ -1022,15 +1028,95 @@ body {
   }
 
   .floating-overlay-panel {
-    bottom: 12px;
+    bottom: 76px !important; /* Situate above mobile bottom nav */
     left: 12px;
     right: 12px;
     max-width: none;
     width: auto;
+    z-index: 90;
   }
 
   .overlay-actions-row {
     grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  /* Mobile Bottom Nav Bar */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: #111827;
+    border-top: 1px solid var(--border-color);
+    z-index: 110;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .mobile-nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    flex: 1;
+    padding: 8px 0;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-nav-btn.active {
+    color: var(--primary);
+  }
+  
+  .mobile-nav-btn svg {
+    transition: transform 0.2s ease;
+  }
+  
+  .mobile-nav-btn.active svg {
+    transform: scale(1.1);
+  }
+
+  .tabs-nav {
+    display: none !important;
+  }
+
+  .mobile-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .mobile-drawer-title {
+    font-family: var(--font-primary);
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .mobile-drawer-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s;
+  }
+
+  .mobile-drawer-close-btn:hover {
+    color: #ef4444;
   }
 }
 
@@ -1038,4 +1124,275 @@ body {
   .mobile-pull-bar {
     display: none;
   }
+  .mobile-drawer-header {
+    display: none;
+  }
+}
+
+/* Metrics & Dashboard Styles */
+.metrics-summary-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.metric-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metric-val {
+  font-size: 24px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.metric-lbl {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.progress-container-panel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.progress-lbl {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 8px;
+}
+
+.progress-bar-stacked {
+  display: flex;
+  height: 8px;
+  background: #27272a;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-seg {
+  height: 100%;
+}
+
+.progress-seg.visited {
+  background-color: var(--status-visited);
+}
+
+.progress-seg.closed {
+  background-color: var(--status-closed);
+}
+
+.progress-seg.pending {
+  background-color: var(--status-pending);
+}
+
+.progress-legend {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-dot.green { background-color: var(--status-visited); }
+.legend-dot.red { background-color: var(--status-closed); }
+.legend-dot.yellow { background-color: var(--status-pending); }
+
+.sub-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  letter-spacing: 0.5px;
+  margin-top: 12px;
+}
+
+.sellers-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-activity-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.seller-bullet {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.seller-act-name {
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.seller-act-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.seller-act-visits {
+  color: #fff;
+}
+
+.seller-act-progress {
+  color: var(--text-muted);
+}
+
+/* Seller Edit Styles */
+.sellers-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.seller-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.seller-color-pill {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.seller-display-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.seller-display-name {
+  font-size: 13px;
+  color: #fff;
+}
+
+.seller-btn-edit {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.seller-btn-edit:hover {
+  color: var(--primary);
+}
+
+.seller-edit-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.seller-name-input {
+  flex: 1;
+}
+
+.seller-edit-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.seller-btn-save {
+  background: var(--primary);
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.seller-btn-cancel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+/* Export Reports Buttons */
+.export-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.export-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  color: #fff;
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.export-btn:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: var(--primary);
 }

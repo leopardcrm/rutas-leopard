@@ -190,6 +190,29 @@ app.post('/api/reset', (req, res) => {
   res.json({ message: "Todas las rutas han sido restablecidas a Pendiente.", last_reset: db.last_reset });
 });
 
+// 5. Actualizar nombre de vendedor
+app.put('/api/sellers/:id', (req, res) => {
+  const sellerId = parseInt(req.params.id);
+  const { name } = req.body;
+  
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: "El nombre del vendedor es obligatorio." });
+  }
+  
+  const db = readDB();
+  const sellerIdx = db.sellers.findIndex(s => s.id === sellerId);
+  
+  if (sellerIdx === -1) {
+    return res.status(404).json({ error: "Vendedor no encontrado." });
+  }
+  
+  db.sellers[sellerIdx].name = name.trim();
+  writeDB(db);
+  
+  console.log(`Vendedor ${sellerId} renombrado a: ${db.sellers[sellerIdx].name}`);
+  res.json(db.sellers[sellerIdx]);
+});
+
 // Servir frontend compilado en producción
 app.use(express.static(path.join(__dirname, 'dist')));
 
