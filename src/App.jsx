@@ -297,6 +297,13 @@ export default function App() {
       });
 
       markersGroupRef.current.addLayer(marker);
+
+      // Open popup if this client is selected
+      if (isSelected) {
+        setTimeout(() => {
+          marker.openPopup();
+        }, 50);
+      }
     });
 
     // 3. Clear old Path Lines
@@ -365,15 +372,6 @@ export default function App() {
     
     if (client && map) {
       map.setView([client.latitude, client.longitude], 16);
-      
-      // Find and open popup for this client marker
-      markersGroupRef.current.eachLayer((layer) => {
-        const latlng = layer.getLatLng();
-        if (latlng.lat === client.latitude && latlng.lng === client.longitude) {
-          layer.openPopup();
-        }
-      });
-      
       setShowMobileDrawer(true);
     }
   };
